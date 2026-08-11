@@ -66,3 +66,42 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: uv sync --group dev --python ${{ matrix.python }}
       - run: uv run --python ${{ matrix.python }} pytest
+
+  e2e:
+    name: End to end (real reed)
+    runs-on: ubuntu-latest
+    needs: [lint, types, test]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          enable-cache: true
+          cache-suffix: e2e
+      - run: uv sync --group dev
+
+      - name: Start reed
+        run: docker compose -f e2e/docker-compose.yml up -d --wait
+
+      - name: Index the fixture document
+        run: |
+          set -euo pipefail
+          id=$(curl -sf -F file=@e2e/handbook.md http://localhost:8000/v1/documents | jq -r .document_id)
+          echo "uploaded ${id}"
+          for _ in $(seq 60); do
+            status=$(curl -sf "http://localhost:8000/v1/documents/${id}" | jq -r .status)
+            [ "$status" = "ready" ] && break
+            [ "$status" = "error" ] && { curl -s "http://localhost:8000/v1/documents/${id}"; exit 1; }
+            sleep 2
+          done
+          [ "$status" = "ready" ] || { echo "ingestion never finished (last: $status)"; exit 1; }
+
+      - name: Drive reed-mcp as an MCP host would
+        env:
+          REED_MCP_E2E_URL: http://localhost:8000
+        run: uv run pytest e2e -v
+
+      - name: Show reed logs on failure
+        if: failure()
+        run: docker compose -f e2e/docker-compose.yml logs --no-color reed

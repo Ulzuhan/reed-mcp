@@ -143,6 +143,27 @@ async def test_check_reed_survives_unreachable_reed(caplog: pytest.LogCaptureFix
 
 
 @respx.mock
+async def test_lifespan_probes_reed_and_then_serves_from_the_same_loop() -> None:
+    """The probe belongs inside the lifespan, not in a loop of its own.
+
+    Running it via a separate ``anyio.run`` before ``mcp.run()`` left the HTTP
+    client bound to a loop that had already closed, and every tool call then
+    failed with "Event loop is closed" — invisible to mocked tests, fatal in
+    every real host. Keeping the probe here is what prevents that.
+    """
+    health = respx.get(f"{BASE}/health").mock(
+        return_value=httpx.Response(200, json={"status": "ok", "version": "0.5.1"})
+    )
+    respx.post(f"{BASE}/v1/search").mock(return_value=_search_response("short"))
+
+    async with server.lifespan(server.mcp):
+        assert health.called
+        payload = await server.reed_search("query")
+
+    assert payload["sources"][0]["filename"] == "handbook.pdf"
+
+
+@respx.mock
 async def test_check_reed_accepts_current_version(caplog: pytest.LogCaptureFixture) -> None:
     respx.get(f"{BASE}/health").mock(
         return_value=httpx.Response(200, json={"status": "ok", "version": "0.5.1"})

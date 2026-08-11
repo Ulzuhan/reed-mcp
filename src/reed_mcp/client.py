@@ -16,19 +16,33 @@ class ReedClientError(Exception):
 class ReedClient:
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
-        headers = {"X-API-Key": settings.api_key} if settings.api_key else {}
-        self._http = httpx.AsyncClient(
-            base_url=settings.url,
-            headers=headers,
-            timeout=settings.timeout_seconds,
-        )
+        self._http: httpx.AsyncClient | None = None
 
     @property
     def url(self) -> str:
         return self._settings.url
 
+    def _transport(self) -> httpx.AsyncClient:
+        """Build the client on first use, inside the loop that will drive it.
+
+        An ``httpx.AsyncClient`` binds its pool to whichever event loop first
+        awaits it. Constructing it eagerly at import or startup time is how it
+        ends up bound to a loop that has already closed, and every later
+        request then fails with "Event loop is closed".
+        """
+        if self._http is None:
+            headers = {"X-API-Key": self._settings.api_key} if self._settings.api_key else {}
+            self._http = httpx.AsyncClient(
+                base_url=self._settings.url,
+                headers=headers,
+                timeout=self._settings.timeout_seconds,
+            )
+        return self._http
+
     async def aclose(self) -> None:
-        await self._http.aclose()
+        if self._http is not None:
+            await self._http.aclose()
+            self._http = None
 
     async def search(self, query: str, top_k: int | None) -> dict[str, Any]:
         body: dict[str, Any] = {"query": query}
@@ -61,7 +75,7 @@ class ReedClient:
         params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         try:
-            response = await self._http.request(method, path, json=json, params=params)
+            response = await self._transport().request(method, path, json=json, params=params)
         except httpx.TimeoutException as exc:
             raise ReedClientError(
                 f"reed did not answer within {self._settings.timeout_seconds:g}s. "
