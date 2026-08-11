@@ -144,7 +144,7 @@ You need a running [reed](https://github.com/Ulzuhan/reed) **0.5.0 or newer**
 Claude Code:
 
 ```bash
-claude mcp add reed -- uvx reed-mcp
+claude mcp add reed -- uvx --from git+https://github.com/Ulzuhan/reed-mcp reed-mcp
 ```
 
 Claude Desktop, in `claude_desktop_config.json`:
@@ -154,7 +154,7 @@ Claude Desktop, in `claude_desktop_config.json`:
   "mcpServers": {
     "reed": {
       "command": "uvx",
-      "args": ["reed-mcp"]
+      "args": ["--from", "git+https://github.com/Ulzuhan/reed-mcp", "reed-mcp"]
     }
   }
 }
@@ -162,6 +162,11 @@ Claude Desktop, in `claude_desktop_config.json`:
 
 Then ask your assistant something your documents answer. It will search, quote
 and cite.
+
+Installing from the repository rather than from PyPI is deliberate: reed is
+distributed the same way, and a tool whose entire premise is that nothing leaves
+your machine should not ask you to trust one more package index than it has to.
+Append `@<tag-or-commit>` to the URL to pin a specific revision.
 
 ## Configuration
 
