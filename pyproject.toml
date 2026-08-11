@@ -1,6 +1,6 @@
 [project]
 name = "reed-mcp"
-version = "0.1.0.dev0"
+version = "0.1.0"
 description = "MCP server for reed: cited evidence from your local documents, for any MCP host"
 readme = "README.md"
 license = "Apache-2.0"
