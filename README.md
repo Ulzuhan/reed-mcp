@@ -79,6 +79,42 @@ the caller would discard.
 | `reed_list_documents` | The corpus and each document's ingestion status. |
 | `reed_get_document` | One document's status and metadata. |
 
+## Seeing it work
+
+A real Claude Code session, against a local reed holding one document:
+
+```
+$ claude -p "Using the reed tools, what is the expense pre-approval threshold
+             and how long do I have to submit receipts? Cite the document."
+
+From `handbook.md` — Acme Remote Work Handbook, "Expenses" section:
+
+- Pre-approval threshold: expenses above €75 require pre-approval from your
+  team lead.
+- Receipts: must be submitted within 30 days of purchase.
+
+Also in that section: reimbursement is processed on the 15th of the following
+month.
+```
+
+The model wrote that from what `reed_search` handed it — evidence, not prose:
+
+```json
+{
+  "sufficient_evidence": true,
+  "min_evidence_score": 0.83,
+  "sources": [
+    {
+      "n": 1,
+      "filename": "handbook.md",
+      "section": "Acme Remote Work Handbook",
+      "score": 1.0,
+      "excerpt": "## Expenses\n\nExpenses above 75 euros require pre-approval from your team lead. Receipts must…"
+    }
+  ]
+}
+```
+
 ## Results
 
 Measured end to end — a real MCP session over stdio, a real reed, a real index —
