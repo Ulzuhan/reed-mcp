@@ -1,0 +1,46 @@
+# The reed the e2e suite runs against in CI: the published image, not a build.
+#
+# Pinned by tag *and* digest so a moved tag cannot silently change what the
+# contract is verified against. Raise both together when adopting a new reed,
+# and keep the tag at or above the MIN_REED_VERSION the server enforces.
+name: reed-mcp-e2e
+
+services:
+  reed:
+    image: ghcr.io/ulzuhan/reed:0.5.1@sha256:8f4f25999181c4047f430b51ec4dc4541a7c7d467130ce4f389df085c667055d
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      # Deterministic stand-in models: no API keys, no model downloads, and the
+      # same retrieval and citation code paths as a real profile.
+      - REED_PROFILE=fake
+      - REED_QDRANT_URL=http://qdrant:6333
+      - REED_DATA_DIR=/data
+      - REED_HOST=0.0.0.0
+      - REED_PORT=8000
+    volumes:
+      - reed_data:/data
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  qdrant:
+    image: qdrant/qdrant:v1.19.0@sha256:057ee3a8da769fe7310dd3537b4dc7583bf87a95ce8ac43c0af5a46bc580d1fc
+    healthcheck:
+      # The image ships no curl or wget — bash's /dev/tcp is what is available.
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  reed_data:

@@ -145,3 +145,30 @@ async def test_5xx_mentions_reed_logs_without_json_body(client: ReedClient) -> N
     respx.post(f"{BASE}/v1/search").mock(return_value=httpx.Response(502, text="Bad Gateway"))
     with pytest.raises(ReedClientError, match="server-side failure"):
         await client.search("q", top_k=None)
+
+
+def test_construction_does_not_touch_an_event_loop() -> None:
+    """The transport must bind to the loop that uses it, not the one that built it.
+
+    A client constructed eagerly outside the serving loop — during a startup
+    probe, say — carries a pool tied to a loop that is closed by the time the
+    first tool call arrives, and every request then fails with "Event loop is
+    closed". Building it on first request is what prevents that.
+    """
+    instance = ReedClient(Settings(url=BASE))
+    assert instance._http is None
+
+
+async def test_client_works_against_a_real_socket(reed_socket: str) -> None:
+    """One test that goes through the actual connection pool, not respx.
+
+    respx answers above the transport, so it cannot show that requests survive
+    a real keep-alive connection — which is exactly where the event-loop
+    binding that broke every tool call used to hide.
+    """
+    instance = ReedClient(Settings(url=reed_socket))
+    try:
+        assert (await instance.health())["version"] == "0.5.1"
+        assert (await instance.search("q", top_k=None))["latency_ms"] == 1
+    finally:
+        await instance.aclose()
