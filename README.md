@@ -139,12 +139,15 @@ for it — that measurement will be added when
 
 You need a running [reed](https://github.com/Ulzuhan/reed) **0.5.0 or newer**
 (`/v1/search` first shipped there; 0.5.1+ recommended) and
-[uv](https://docs.astral.sh/uv/).
+[uv](https://docs.astral.sh/uv/). If you would rather bring up reed with
+Ollama and Qdrant in one command,
+[`private-ai-stack`](https://github.com/Ulzuhan/private-ai-stack) does that and
+binds reed exactly where this server looks for it.
 
 Claude Code:
 
 ```bash
-claude mcp add reed -- uvx --from git+https://github.com/Ulzuhan/reed-mcp reed-mcp
+claude mcp add reed -- uvx --from git+https://github.com/Ulzuhan/reed-mcp@v0.1.0 reed-mcp
 ```
 
 Claude Desktop, in `claude_desktop_config.json`:
@@ -154,7 +157,7 @@ Claude Desktop, in `claude_desktop_config.json`:
   "mcpServers": {
     "reed": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/Ulzuhan/reed-mcp", "reed-mcp"]
+      "args": ["--from", "git+https://github.com/Ulzuhan/reed-mcp@v0.1.0", "reed-mcp"]
     }
   }
 }
@@ -166,7 +169,8 @@ and cite.
 Installing from the repository rather than from PyPI is deliberate: reed is
 distributed the same way, and a tool whose entire premise is that nothing leaves
 your machine should not ask you to trust one more package index than it has to.
-Append `@<tag-or-commit>` to the URL to pin a specific revision.
+The `@v0.1.0` above pins the release; drop it to track `main`, or point it at
+any tag or commit.
 
 ## Configuration
 
