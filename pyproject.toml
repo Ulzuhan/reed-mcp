@@ -9,7 +9,7 @@ authors = [{ name = "José Manuel Cotarelo Linares" }]
 requires-python = ">=3.11"
 dependencies = [
     "httpx>=0.27",
-    "mcp>=1.12,<2",
+    "mcp>=1.12,<3",
 ]
 keywords = ["mcp", "rag", "local-first", "reed", "citations"]
 classifiers = [
