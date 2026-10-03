@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator
 import httpx
 import pytest
 import respx
-from mcp.server.fastmcp.exceptions import ToolError
+from mcp.server.mcpserver.exceptions import ToolError
 
 from reed_mcp import server
 from reed_mcp.config import Settings
@@ -51,8 +51,8 @@ async def test_all_four_tools_are_registered_read_only() -> None:
     assert set(by_name) == EXPECTED_TOOLS
     for tool in by_name.values():
         assert tool.annotations is not None
-        assert tool.annotations.readOnlyHint is True
-        assert tool.annotations.destructiveHint is False
+        assert tool.annotations.read_only_hint is True
+        assert tool.annotations.destructive_hint is False
 
 
 async def test_tool_descriptions_frame_excerpts_as_data() -> None:

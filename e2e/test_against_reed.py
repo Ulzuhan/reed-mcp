@@ -52,9 +52,9 @@ async def mcp_session() -> AsyncIterator[ClientSession]:
 
 async def _call(session: ClientSession, tool: str, **arguments: Any) -> dict[str, Any]:
     result = await session.call_tool(tool, arguments)
-    assert result.isError is False, _text(result)
-    assert result.structuredContent is not None, "tools must return structured content"
-    return result.structuredContent
+    assert result.is_error is False, _text(result)
+    assert result.structured_content is not None, "tools must return structured content"
+    return result.structured_content
 
 
 def _text(result: Any) -> str:
@@ -67,7 +67,7 @@ async def test_host_sees_four_read_only_tools() -> None:
         assert {tool.name for tool in listing.tools} == EXPECTED_TOOLS
         for tool in listing.tools:
             assert tool.annotations is not None
-            assert tool.annotations.readOnlyHint is True
+            assert tool.annotations.read_only_hint is True
 
 
 async def test_search_returns_citable_evidence() -> None:
@@ -139,5 +139,5 @@ async def test_unknown_document_fails_with_an_actionable_message() -> None:
     async with mcp_session() as session:
         result = await session.call_tool("reed_get_document", {"document_id": "d-does-not-exist"})
 
-    assert result.isError is True
+    assert result.is_error is True
     assert "reed_list_documents" in _text(result)
