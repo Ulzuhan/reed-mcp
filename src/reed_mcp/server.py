@@ -14,9 +14,9 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import FastMCP
-from mcp.server.fastmcp.exceptions import ToolError
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
+from mcp_types import ToolAnnotations
 from pydantic import Field
 
 from reed_mcp import __version__
@@ -40,7 +40,7 @@ _client: ReedClient | None = None
 
 
 @asynccontextmanager
-async def lifespan(_server: FastMCP) -> AsyncIterator[None]:
+async def lifespan(_server: MCPServer[None]) -> AsyncIterator[None]:
     """Probe reed, then hand the loop over to the server.
 
     This has to happen here rather than before ``mcp.run()``: a separate
@@ -55,7 +55,7 @@ async def lifespan(_server: FastMCP) -> AsyncIterator[None]:
         await client.aclose()
 
 
-mcp = FastMCP("reed_mcp", instructions=INSTRUCTIONS, lifespan=lifespan)
+mcp = MCPServer[None]("reed_mcp", instructions=INSTRUCTIONS, lifespan=lifespan)
 
 
 def configure(settings: Settings) -> ReedClient:
@@ -121,10 +121,10 @@ TopKField = Annotated[
 def _read_only(title: str) -> ToolAnnotations:
     return ToolAnnotations(
         title=title,
-        readOnlyHint=True,
-        destructiveHint=False,
-        idempotentHint=True,
-        openWorldHint=False,
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=False,
     )
 
 
