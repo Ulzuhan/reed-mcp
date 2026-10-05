@@ -7,7 +7,7 @@ name: reed-mcp-e2e
 
 services:
   reed:
-    image: ghcr.io/ulzuhan/reed:0.5.1@sha256:8f4f25999181c4047f430b51ec4dc4541a7c7d467130ce4f389df085c667055d
+    image: ghcr.io/ulzuhan/reed:0.6.0@sha256:c37927552bc0b5bc8363444144913a0545c5cdfbb4bf9252791c62621b9fd588
     ports:
       - "127.0.0.1:8000:8000"
     environment:
@@ -33,7 +33,7 @@ services:
       - ALL
 
   qdrant:
-    image: qdrant/qdrant:v1.19.0@sha256:057ee3a8da769fe7310dd3537b4dc7583bf87a95ce8ac43c0af5a46bc580d1fc
+    image: qdrant/qdrant:v1.19.1@sha256:12364fe851b9f17356fc88189fc06d1b521262e04659ec7345975b00c9246a10
     healthcheck:
       # The image ships no curl or wget — bash's /dev/tcp is what is available.
       test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1"]
